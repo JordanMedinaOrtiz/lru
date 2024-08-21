@@ -1,0 +1,115 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Algoritmo LRU">
+  <div class="w-full max-w-3xl mx-auto p-4 space-y-6">
+    <h2 class="text-2xl font-bold text-center">Visualización de LRU</h2>
+
+    <div class="space-y-2">
+      <label class="block text-sm font-medium">
+        Solicitud de entrada:
+      </label>
+      <div class="flex space-x-2">
+        <input type="text" id="input" class="flex-grow bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg px-4" placeholder="Introduzca un valor" />
+        <button type="button" class="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 me-2" id="addData">Agregar al caché</button>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <h3 class="text-lg font-semibold">Elemento (más reciente → menos reciente):</h3>
+      <div class="flex justify-between items-center">
+        {[0, 1, 2].map((index) => (
+          <div
+            class={`cache-slot w-1/4 h-24 rounded-lg flex items-center justify-center text-lg font-bold transition-all duration-300 border-gray-300 bg-gray-200 text-gray-800`}
+          >
+            Vacio
+          </div>
+        ))}
+      </div>
+      <div class="flex justify-between px-4">
+        <div class="text-center">
+          <svg class="w-10 h-10 text-gray-800 mx-auto" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4 4 4"/>
+          </svg>
+          <span class="text-sm">Más reciente</span>
+        </div>
+        <div class="text-center">
+          <svg class="w-10 h-10 text-gray-800 mx-auto" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/>
+          </svg>
+          <span class="text-sm">Menos reciente</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 rounded-lg bg-gray-200 shadow-sm">
+      <h4 class="font-semibold">Última acción:</h4>
+      <p id="last-action">Ultimo dato</p>
+    </div>
+
+    <div class="p-4 rounded-lg space-y-2 bg-gray-200 shadow-sm">
+      <h4 class="font-semibold">Cómo funciona:</h4>
+      <ol class="list-decimal list-inside space-y-1">
+        <li>Introduzca un valor en el campo de entrada y haga clic en "Agregar al Caché".</li>
+        <li>Si el valor ya está en la memoria caché, se mueve a la posición utilizada más recientemente.</li>
+        <li>Si el valor no está en la memoria caché y ésta está llena, se elimina el elemento utilizado menos recientemente.</li>
+        <li>Los elementos nuevos siempre se agregan a la posición utilizada más recientemente.</li>
+      </ol>
+    </div>
+  </div>
+</Layout>
+
+<script>
+let cache = [];
+let input = '';
+let lastAction = null;
+
+document.getElementById('addData').addEventListener('click', handleAddToCache);
+
+function handleAddToCache() {
+  const inputElement = document.getElementById('input') as HTMLInputElement;
+  input = inputElement.value.trim();
+
+  if(input === '') return;
+
+  lastAction = null;
+
+  if(cache.includes(input)) {
+    //Mover a la posición más recientemente usada
+    cache = [input, ...cache.filter(item => item !== input)];
+		lastAction = `Se movió "${input}" a la posición utilizada más recientemente`;
+	}else {
+    //Agregar
+    if(cache.length >= 3) {
+      const removedItem = cache[2];
+      cache = [input, ...cache.slice(0, 2)];
+			lastAction = `Se agregó "${input}" y se eliminó el elemento usado menos recientemente "${removedItem}"`;
+		}else {
+      cache = [input, ...cache];
+			lastAction = `Se agregó "${input}" al caché`;
+		}
+  }
+
+  inputElement.value = '';
+
+  updateCacheDisplay();
+  updateLastActionDisplay();
+}
+
+function updateCacheDisplay() {
+  const cacheElements = document.querySelectorAll('.cache-slot');
+  cacheElements.forEach((element, index) => {
+    element.textContent = cache[index] || 'Vacio';
+    element.classList.toggle('bg-gray-800', index === 0);
+    element.classList.toggle('text-white', index === 0);
+    element.classList.toggle('bg-gray-200', index !== 0);
+    element.classList.toggle('text-gray-800', index !== 0);
+  });
+}
+
+function updateLastActionDisplay() {
+  const lastActionElement = document.getElementById('last-action');
+  lastActionElement.textContent = lastAction || 'Ultimo dato';
+}
+</script>
